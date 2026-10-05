@@ -1,0 +1,29 @@
+[Unit]
+Description=enedis-rs REST API Server & Webhook Gateway
+Documentation=https://github.com/mat/enedis-rs
+After=network.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=enedis
+Group=enedis
+EnvironmentFile=/etc/enedis/enedis.env
+ExecStart=/usr/local/bin/enedis serve --host "${API_HOST:-0.0.0.0}" --port "${API_PORT:-8080}"
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=65536
+
+# Durcissement systemd
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/enedis
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+
+[Install]
+WantedBy=multi-user.target

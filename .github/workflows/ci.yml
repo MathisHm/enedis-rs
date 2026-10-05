@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check-and-test:
+    name: Check, Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check code formatting
+        run: cargo fmt --check
+
+      - name: Check minimal compilation (no-default-features)
+        run: cargo check --no-default-features
+
+      - name: Check with default features
+        run: cargo check
+
+      - name: Check with all targets and features
+        run: cargo check --all-targets --all-features
+
+      - name: Run Clippy linter
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Run tests (default features)
+        run: cargo test
+
+      - name: Run all tests (all features)
+        run: cargo test --all-features -- --nocapture
+
+      - name: Verify Fuzz harness compilation
+        run: cargo check --manifest-path fuzz/Cargo.toml
+
+  docker-build:
+    name: Docker Build Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: enedis-rs:test

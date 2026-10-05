@@ -1,0 +1,168 @@
+version: '3.8'
+
+services:
+  # ============================================================================
+  # 1. Base de données relationnelle & séries temporelles PostgreSQL
+  # ============================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: enedis-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-enedis}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-enedis_password}
+      POSTGRES_DB: ${POSTGRES_DB:-enedis_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-enedis} -d ${POSTGRES_DB:-enedis_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ============================================================================
+  # 2. Simulateur Enedis (SGE SOAP mTLS & Data Connect REST v5)
+  # Permet de tester immédiatement sans compte Enedis en local / démo.
+  # ============================================================================
+  enedis-mock:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    container_name: enedis-mock-server
+    command: ["mock", "--host", "0.0.0.0", "--port", "9090", "--scenario", "success"]
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+
+  # ============================================================================
+  # 3. Serveur API REST & Observabilité Prometheus
+  # ============================================================================
+  enedis-api:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    container_name: enedis-api
+    command: ["serve", "--host", "0.0.0.0", "--port", "8080"]
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-enedis}:${POSTGRES_PASSWORD:-enedis_password}@postgres:5432/${POSTGRES_DB:-enedis_db}
+      ENEDIS_PROVIDER: ${ENEDIS_PROVIDER:-sge}
+      ENEDIS_API_KEY: ${ENEDIS_API_KEY:-}
+      ENEDIS_ENDPOINT: ${ENEDIS_ENDPOINT:-http://enedis-mock:9090/services/}
+      ENEDIS_DATA_CONNECT_URL: ${ENEDIS_DATA_CONNECT_URL:-http://enedis-mock:9090}
+      ENEDIS_DATA_CONNECT_CLIENT_ID: ${ENEDIS_DATA_CONNECT_CLIENT_ID:-}
+      ENEDIS_DATA_CONNECT_CLIENT_SECRET: ${ENEDIS_DATA_CONNECT_CLIENT_SECRET:-}
+      ENEDIS_DATA_CONNECT_TOKEN: ${ENEDIS_DATA_CONNECT_TOKEN:-}
+      ENEDIS_CERT_P12: ${ENEDIS_CERT_P12:-}
+      ENEDIS_CERT_PASSWORD: ${ENEDIS_CERT_PASSWORD:-}
+      RUST_LOG: info
+    ports:
+      - "8080:8080"
+    volumes:
+      # Montage optionnel de vos certificats mTLS si utilisation en production SGE
+      - ./certs:/etc/enedis/certs:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      enedis-mock:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # ============================================================================
+  # 4. Agent Daemon de Collecte Continue & Publication MQTT
+  # ============================================================================
+  enedis-agent:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    container_name: enedis-agent
+    command: ["agent", "--interval-secs", "60", "--rate-limit-per-minute", "30", "--mqtt-broker", "${MQTT_BROKER:-mqtt://mosquitto:1883}", "--mqtt-prefix", "${MQTT_PREFIX:-enedis}"]
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-enedis}:${POSTGRES_PASSWORD:-enedis_password}@postgres:5432/${POSTGRES_DB:-enedis_db}
+      ENEDIS_PROVIDER: ${ENEDIS_PROVIDER:-sge}
+      ENEDIS_ENDPOINT: ${ENEDIS_ENDPOINT:-http://enedis-mock:9090/services/}
+      ENEDIS_DATA_CONNECT_URL: ${ENEDIS_DATA_CONNECT_URL:-http://enedis-mock:9090}
+      ENEDIS_DATA_CONNECT_CLIENT_ID: ${ENEDIS_DATA_CONNECT_CLIENT_ID:-}
+      ENEDIS_DATA_CONNECT_CLIENT_SECRET: ${ENEDIS_DATA_CONNECT_CLIENT_SECRET:-}
+      ENEDIS_DATA_CONNECT_TOKEN: ${ENEDIS_DATA_CONNECT_TOKEN:-}
+      ENEDIS_CERT_P12: ${ENEDIS_CERT_P12:-}
+      ENEDIS_CERT_PASSWORD: ${ENEDIS_CERT_PASSWORD:-}
+      MQTT_BROKER: ${MQTT_BROKER:-mqtt://mosquitto:1883}
+      MQTT_PREFIX: ${MQTT_PREFIX:-enedis}
+      MQTT_USER: ${MQTT_USER:-}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-}
+      RUST_LOG: info
+    volumes:
+      - ./certs:/etc/enedis/certs:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      enedis-mock:
+        condition: service_started
+      mosquitto:
+        condition: service_started
+    restart: unless-stopped
+
+  # ============================================================================
+  # 5. Broker MQTT Mosquitto (Home Assistant Auto-Discovery)
+  # ============================================================================
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: enedis-mosquitto
+    command: "mosquitto -c /mosquitto-no-auth.conf"
+    ports:
+      - "1883:1883"
+    restart: unless-stopped
+
+  # ============================================================================
+  # 6. Moteur de Métriques Prometheus
+  # ============================================================================
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: enedis-prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9091:9090"
+    depends_on:
+      - enedis-api
+    restart: unless-stopped
+
+  # ============================================================================
+  # 7. Dashboard & Visualisation Grafana (Pré-configuré "Out of the box")
+  # ============================================================================
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: enedis-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: "/var/lib/grafana/dashboards/enedis-dashboard.json"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:

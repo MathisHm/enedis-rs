@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>enedis-rs — Community Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #070a12;
+            --bg-surface: #0e1526;
+            --bg-card: #131d33;
+            --bg-card-hover: #172440;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-strong: rgba(255, 255, 255, 0.16);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --cyan: #06b6d4;
+            --blue: #3b82f6;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+            --rose: #ef4444;
+            --purple: #8b5cf6;
+            --glow-cyan: 0 0 24px -4px rgba(6, 182, 212, 0.3);
+            --glow-emerald: 0 0 24px -4px rgba(16, 185, 129, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: rgba(14, 21, 38, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .brand-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--cyan), var(--blue));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--glow-cyan);
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #fff;
+        }
+
+        .brand-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .badge-edition {
+            background: rgba(6, 182, 212, 0.12);
+            color: var(--cyan);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 500;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+        }
+
+
+
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .card:hover {
+            border-color: var(--border-strong);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--emerald);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            margin: 0.5rem 0;
+        }
+
+        .metric-sub {
+            color: var(--text-muted);
+            font-size: 0.82rem;
+        }
+
+        .section-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin: 2rem 0 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        td {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+        }
+
+        tr:hover td {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+
+        .code-box {
+            background: #040711;
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #38bdf8;
+            overflow-x: auto;
+            margin-top: 0.75rem;
+        }
+
+        footer {
+            border-top: 1px solid var(--border-subtle);
+            padding: 1.5rem 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            background: var(--bg-surface);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand-container">
+            <div class="brand-icon">⚡</div>
+            <div class="brand-title">
+                enedis-rs
+                <span class="badge-edition">Community v0.1.0</span>
+            </div>
+        </div>
+        <nav class="nav-links">
+            <a href="/swagger-ui" class="nav-link" target="_blank">📖 Swagger UI</a>
+            <a href="/metrics" class="nav-link" target="_blank">📊 Prometheus</a>
+            <a href="/health" class="nav-link" target="_blank">🩺 Health</a>
+            <a href="https://github.com/mat/enedis-rs" class="nav-link" target="_blank">⭐ GitHub</a>
+        </nav>
+    </header>
+
+
+
+    <main>
+        <div class="grid-cards">
+            <!-- État de la passerelle -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Passerelle & Connectivité</div>
+                    <div class="status-pill" id="status-gateway">
+                        <span class="status-dot"></span> Opérationnel
+                    </div>
+                </div>
+                <div class="metric-value" id="val-uptime">SGE / mTLS</div>
+                <div class="metric-sub">Transport sécurisé Enedis & OAuth2 Data Connect v5</div>
+                <div class="code-box">enedis doctor --verbose</div>
+            </div>
+
+            <!-- Signaux Réseau EDF Tempo -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">EDF Tempo Aujourd'hui</div>
+                    <div class="status-pill" id="status-tempo">
+                        <span class="status-dot"></span> Synchronisé
+                    </div>
+                </div>
+                <div class="metric-value" id="val-tempo" style="color: var(--cyan);">BLEU</div>
+                <div class="metric-sub">Lendemain : <strong id="val-tempo-next" style="color: var(--text-primary);">En attente (11h00)</strong></div>
+            </div>
+
+            <!-- Signaux Réseau RTE EcoWatt -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">RTE EcoWatt</div>
+                    <div class="status-pill" id="status-ecowatt">
+                        <span class="status-dot"></span> Réseau Normal
+                    </div>
+                </div>
+                <div class="metric-value" id="val-ecowatt" style="color: var(--emerald);">Niveau 1</div>
+                <div class="metric-sub">Consommation raisonnable sur le réseau national</div>
+            </div>
+
+            <!-- Domotique Home Assistant -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Home Assistant & MQTT</div>
+                    <div class="status-pill" style="color: var(--purple); background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.3);">
+                        <span class="status-dot"></span> Auto-Discovery
+                    </div>
+                </div>
+                <div class="metric-value" style="font-size: 1.4rem;">MQTT HA Ready</div>
+                <div class="metric-sub">8 capteurs natifs (puissance, index, HC/HP, Tempo, EcoWatt)</div>
+            </div>
+        </div>
+
+        <div class="section-title">Points de Livraison Enregistrés (PRM)</div>
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Identifiant PRM</th>
+                        <th>Dernière Synchronisation</th>
+                        <th>Flux Actif</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="table-points-body">
+                    <tr>
+                        <td style="font-family: 'JetBrains Mono', monospace; font-weight: 600;">Chargement...</td>
+                        <td>--</td>
+                        <td>Consommation</td>
+                        <td><span class="status-pill"><span class="status-dot"></span> Prêt</span></td>
+                        <td><a href="/api/v1/points" style="color: var(--cyan); text-decoration: none;">Détails JSON</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer>
+        enedis-rs Community Edition • Licence libre MIT / Apache-2.0 • Conçu en Safe Rust 🦀
+    </footer>
+
+    <script>
+        async function loadData() {
+            try {
+                const res = await fetch('/api/v1/points');
+                if (res.ok) {
+                    const points = await res.json();
+                    const tbody = document.getElementById('table-points-body');
+                    if (points.length > 0) {
+                        tbody.innerHTML = points.map(p => `
+                            <tr>
+                                <td style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--text-primary);">${p.point_id}</td>
+                                <td>${p.last_sync ? new Date(p.last_sync).toLocaleString('fr-FR') : 'Jamais'}</td>
+                                <td>${p.direction || 'Consommation'}</td>
+                                <td><span class="status-pill"><span class="status-dot"></span> ${p.status || 'OK'}</span></td>
+                                <td><a href="/api/v1/points/${p.point_id}/measurements" target="_blank" style="color: var(--cyan); text-decoration: none; font-weight: 500;">Mesures →</a></td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Aucun PRM configuré dans la base locale. Utilisez la commande <code>enedis point add &lt;PRM&gt;</code> pour commencer.</td></tr>`;
+                    }
+                }
+            } catch (e) {
+                console.error("Erreur de chargement des PRM", e);
+            }
+        }
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+target/
+**/target/
+**/*.rs.bk
+AGENTS.md
+
+# Fichiers de bases de données locales
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.sqlite-shm
+*.sqlite-wal
+
+# Certificats et clés sensibles
+*.p12
+*.pfx
+*.pem
+*.key
+*.crt
+examples/docker-compose/certs/*
+!examples/docker-compose/certs/.gitkeep
+
+# Variables d'environnement locales
+.env
+.env.local
+.env.*.local
+!examples/docker-compose/.env.example
+
+# IDE & OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

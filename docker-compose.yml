@@ -1,0 +1,82 @@
+services:
+  # Service API REST & Serveur Web enedis-rs
+  enedis-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/mat/enedis-rs:latest
+    container_name: enedis-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - RUST_LOG=info,enedis_rs=debug
+      - DATABASE_URL=postgres://enedis:enedis_secret@postgres:5432/enedis
+      - ENEDIS_PROVIDER=${ENEDIS_PROVIDER:-dataconnect}
+      - ENEDIS_DATA_CONNECT_CLIENT_ID=${ENEDIS_DATA_CONNECT_CLIENT_ID:-}
+      - ENEDIS_DATA_CONNECT_CLIENT_SECRET=${ENEDIS_DATA_CONNECT_CLIENT_SECRET:-}
+      - API_AUTH_KEY=${API_AUTH_KEY:-enedis_dev_secret_key}
+    volumes:
+      - ./certs:/etc/enedis/certs:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Daemon de collecte en arrière-plan et publication MQTT
+  enedis-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/mat/enedis-rs:latest
+    container_name: enedis-agent
+    restart: unless-stopped
+    command: ["sync", "--daemon", "--cron", "0 4 * * *"]
+    environment:
+      - RUST_LOG=info,enedis_rs=debug
+      - DATABASE_URL=postgres://enedis:enedis_secret@postgres:5432/enedis
+      - ENEDIS_PROVIDER=${ENEDIS_PROVIDER:-dataconnect}
+      - ENEDIS_DATA_CONNECT_CLIENT_ID=${ENEDIS_DATA_CONNECT_CLIENT_ID:-}
+      - ENEDIS_DATA_CONNECT_CLIENT_SECRET=${ENEDIS_DATA_CONNECT_CLIENT_SECRET:-}
+      - MQTT_HOST=mosquitto
+      - MQTT_PORT=1883
+      - MQTT_PREFIX=enedis
+    volumes:
+      - ./certs:/etc/enedis/certs:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+
+  # Base de données PostgreSQL pour la persistance haute performance
+  postgres:
+    image: postgres:16-alpine
+    container_name: enedis-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: enedis
+      POSTGRES_PASSWORD: enedis_secret
+      POSTGRES_DB: enedis
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U enedis"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Broker MQTT pour Home Assistant / domotique
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: enedis-mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+
+volumes:
+  postgres-data:
+  mosquitto-data:
+  mosquitto-log:

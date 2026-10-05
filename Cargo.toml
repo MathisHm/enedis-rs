@@ -1,0 +1,76 @@
+[package]
+name = "enedis-rs"
+version = "0.1.0"
+edition = "2021"
+authors = ["Mat"]
+license = "MIT OR Apache-2.0"
+description = "Infrastructure Rust complète pour la collecte, la normalisation et l'analyse des données Enedis (SGE Web Services & Data Connect v5)"
+readme = "README.md"
+repository = "https://github.com/mat/enedis-rs"
+homepage = "https://github.com/mat/enedis-rs"
+documentation = "https://docs.rs/enedis-rs"
+keywords = ["enedis", "linky", "smart-meter", "energy", "home-assistant"]
+categories = ["command-line-utilities", "network-programming", "embedded"]
+
+[features]
+default = ["client", "xml"]
+client = ["dep:reqwest", "dep:tokio", "xml"]
+xml = ["dep:quick-xml"]
+cli = ["dep:clap", "client", "storage", "dep:tracing-subscriber"]
+agent = ["dep:tokio", "client", "storage", "dep:croner"]
+api = ["dep:axum", "dep:tokio", "client", "storage", "openapi"]
+openapi = ["dep:utoipa", "dep:utoipa-swagger-ui"]
+mock-sge = ["dep:axum", "dep:tokio", "client", "xml"]
+storage = ["dep:sqlx"]
+storage-postgres = ["storage", "sqlx/postgres"]
+storage-sqlite = ["storage", "sqlx/sqlite"]
+native-tls-fallback = ["reqwest/native-tls"]
+mqtt = ["dep:rumqttc", "dep:tokio", "storage"]
+parquet = ["dep:parquet", "dep:arrow"]
+analytics = ["parquet"]
+wasm = ["dep:wasm-bindgen", "dep:serde-wasm-bindgen", "dep:console_error_panic_hook"]
+
+[[bin]]
+name = "enedis"
+path = "src/bin/enedis.rs"
+required-features = ["cli"]
+
+[dependencies]
+# Modèles de base (toujours inclus car coeur de domaine sans surcoût de compilation)
+chrono = { version = "0.4.38", features = ["serde"] }
+rust_decimal = { version = "1.36", features = ["serde-with-str"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0" }
+secrecy = "0.8"
+subtle = "2.6"
+rand = { version = "0.8", default-features = false, features = ["std", "std_rng"] }
+
+# Erreurs & Traçabilité (fondations globales)
+thiserror = "1.0"
+tracing = "0.1"
+
+# Réseau & mTLS (feature: client)
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "native-tls-vendored", "json"], optional = true }
+tokio = { version = "1.40", features = ["sync", "time", "rt-multi-thread", "macros", "net", "signal"], optional = true }
+
+# XML & SGE (feature: xml)
+quick-xml = { version = "0.36", features = ["serialize"], optional = true }
+
+# Optionnels (CLI, Stockage, API, Mock, etc.)
+clap = { version = "4.5", features = ["derive", "env"], optional = true }
+tracing-subscriber = { version = "0.3", optional = true }
+sqlx = { version = "0.8", features = ["runtime-tokio", "chrono", "rust_decimal"], optional = true }
+axum = { version = "0.7", optional = true }
+utoipa = { version = "5", features = ["chrono", "decimal", "axum_extras"], optional = true }
+utoipa-swagger-ui = { version = "8", features = ["axum"], optional = true }
+rumqttc = { version = "0.24", optional = true }
+croner = { version = "4.0", default-features = false, features = ["chrono"], optional = true }
+parquet = { version = "54", default-features = false, features = ["arrow", "snap"], optional = true }
+arrow = { version = "54", default-features = false, optional = true }
+wasm-bindgen = { version = "0.2", optional = true }
+serde-wasm-bindgen = { version = "0.6", optional = true }
+console_error_panic_hook = { version = "0.1", optional = true }
+
+[dev-dependencies]
+tokio = { version = "1.40", features = ["full", "test-util"] }
+tracing-subscriber = "0.3"

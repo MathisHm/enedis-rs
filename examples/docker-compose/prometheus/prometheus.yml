@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
+scrape_configs:
+  - job_name: "enedis-rs"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["enedis-api:8080"]
+        labels:
+          environment: "production"
+          service: "enedis-collector"

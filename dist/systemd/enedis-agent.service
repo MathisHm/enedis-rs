@@ -1,0 +1,29 @@
+[Unit]
+Description=enedis-rs Collector Daemon
+Documentation=https://github.com/mat/enedis-rs
+After=network.target postgresql.service mosquitto.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=enedis
+Group=enedis
+EnvironmentFile=/etc/enedis/enedis.env
+ExecStart=/usr/local/bin/enedis sync --daemon --cron "${ENEDIS_CRON:-0 4 * * *}"
+Restart=on-failure
+RestartSec=10s
+LimitNOFILE=65536
+
+# Durcissement systemd (Sandboxing de sécurité Linux)
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/enedis
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+
+[Install]
+WantedBy=multi-user.target

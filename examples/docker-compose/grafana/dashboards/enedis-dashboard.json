@@ -1,0 +1,581 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "⚡ Vue d'ensemble des compteurs",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "postgres-enedis" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.4.0",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "postgres-enedis" },
+          "editorMode": "builder",
+          "format": "table",
+          "rawSql": "SELECT COUNT(DISTINCT point_id) AS total_prms FROM sync_state;",
+          "refId": "A"
+        }
+      ],
+      "title": "PRMs Sous Gestion",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 95 },
+              { "color": "green", "value": 99 }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 5, "x": 4, "y": 1 },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "editorMode": "code",
+          "expr": "(sum(rate(enedis_requests_total{status=\"success\"}[5m])) / (sum(rate(enedis_requests_total[5m])) > 0)) * 100 or vector(100)",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Taux de Succès SGE (5m)",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "purple", "value": null }]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 5, "x": 9, "y": 1 },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "editorMode": "code",
+          "expr": "sum(enedis_requests_total) or vector(0)",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Requêtes SGE Totales",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 5, "x": 14, "y": 1 },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "editorMode": "code",
+          "expr": "sum(enedis_sync_errors_total) or vector(0)",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Erreurs de Collecte",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 86400 },
+              { "color": "red", "value": 172800 }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 5, "x": 19, "y": 1 },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["mean"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "editorMode": "code",
+          "expr": "avg(enedis_collector_data_freshness_seconds) or vector(0)",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Fraîcheur Moyenne (Âge Donnée)",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 101,
+      "title": "📊 Observabilité SGE & Quotas de Collecte (Prometheus)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "req / sec",
+            "axisPlacement": "auto",
+            "fillOpacity": 20,
+            "gradientMode": "opacity",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "id": 6,
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "editorMode": "code",
+          "expr": "sum by (status, direction) (rate(enedis_requests_total[1m]))",
+          "legendFormat": "{{status}} [{{direction}}]",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Débit d'Appels SGE (req/s)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "erreurs / sec",
+            "axisPlacement": "auto",
+            "fillOpacity": 25,
+            "lineWidth": 2,
+            "showPoints": "auto"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "id": 7,
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "editorMode": "code",
+          "expr": "sum by (code, point_id) (rate(enedis_sync_errors_total[1m]))",
+          "legendFormat": "PRM {{point_id}} - Code {{code}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Erreurs Enedis par Code & PRM",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "max": 172800,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "#EAB839", "value": 86400 },
+              { "color": "#EF843C", "value": 129600 },
+              { "color": "red", "value": 172800 }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 14 },
+      "id": 8,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showUnfilled": true
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "editorMode": "code",
+          "expr": "enedis_collector_data_freshness_seconds",
+          "legendFormat": "PRM {{point_id}} ({{direction}})",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Fraîcheur des Données par Compteur (Âge depuis dernière mesure publiée)",
+      "type": "bargauge"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 20 },
+      "id": 102,
+      "title": "📈 Analyse Énergétique & Courbes de Charge (PostgreSQL)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "postgres-enedis" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Puissance (kW)",
+            "axisPlacement": "auto",
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "kW"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Consommation" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "#FF7800", "mode": "fixed" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Production" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "#00FFC0", "mode": "fixed" } }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 10, "w": 16, "x": 0, "y": 21 },
+      "id": 9,
+      "options": {
+        "legend": { "calcs": ["mean", "max", "min"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "postgres-enedis" },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawSql": "SELECT timestamp AS time, value, direction AS metric FROM measurements WHERE point_id = '$prm' AND $__timeFilter(timestamp) ORDER BY timestamp ASC;",
+          "refId": "A"
+        }
+      ],
+      "title": "Courbe de Charge 30 min (Puissance kW)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "postgres-enedis" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisColorMode": "text",
+            "axisLabel": "Énergie (kWh/jour)",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "lineWidth": 1
+          },
+          "unit": "kWh"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Consommation" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "#E24D42", "mode": "fixed" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Production" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "#37B24D", "mode": "fixed" } }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 10, "w": 8, "x": 16, "y": 21 },
+      "id": 10,
+      "options": {
+        "barRadius": 0.1,
+        "barWidth": 0.8,
+        "groupWidth": 0.7,
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": { "mode": "single" },
+        "xTickLabelRotation": 0
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "postgres-enedis" },
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT DATE_TRUNC('day', timestamp) AS time, direction AS metric, ROUND(SUM(value * (interval_seconds::numeric / 3600.0)), 2) AS kwh FROM measurements WHERE point_id = '$prm' AND $__timeFilter(timestamp) GROUP BY 1, 2 ORDER BY 1 ASC;",
+          "refId": "A"
+        }
+      ],
+      "title": "Énergie Journalière Consommée & Injectée (kWh/j)",
+      "type": "barchart"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "postgres-enedis" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "mappings": [
+            { "options": { "1": { "color": "orange", "text": "Estimé" }, "2": { "color": "yellow", "text": "Reconstitué" }, "3": { "color": "green", "text": "Mesuré (Certifié)" } }, "type": "value" }
+          ]
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 31 },
+      "id": 11,
+      "options": {
+        "displayLabels": ["percent", "name"],
+        "legend": { "displayMode": "table", "placement": "bottom", "values": ["percent", "value"] },
+        "pieType": "donut",
+        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "tooltip": { "mode": "single" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "postgres-enedis" },
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT CASE quality WHEN 3 THEN 'Mesuré (Certifié)' WHEN 2 THEN 'Reconstitué' ELSE 'Estimé' END AS qualite, COUNT(*) AS points FROM measurements WHERE point_id = '$prm' GROUP BY quality ORDER BY quality DESC;",
+          "refId": "A"
+        }
+      ],
+      "title": "Répartition Qualité Métrologique Enedis",
+      "type": "piechart"
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "postgres-enedis" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "text", "value": null }]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "sync_status" },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  { "options": { "OK": { "color": "green", "text": "Synchronisé (OK)" } }, "type": "value" },
+                  { "options": { "match": "/ERROR_.*/", "result": { "color": "red" } }, "type": "regex" }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 16, "x": 8, "y": 31 },
+      "id": 12,
+      "options": {
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "postgres-enedis" },
+          "editorMode": "code",
+          "format": "table",
+          "rawSql": "SELECT point_id, direction, last_synced_timestamp, last_sync_attempt, sync_status FROM sync_state ORDER BY point_id, direction;",
+          "refId": "A"
+        }
+      ],
+      "title": "État de Synchronisation du Parc de Compteurs",
+      "type": "table"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["enedis", "energie", "sge", "prm", "linky"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": true, "text": "01234567890123", "value": "01234567890123" },
+        "datasource": { "type": "postgres", "uid": "postgres-enedis" },
+        "definition": "SELECT DISTINCT point_id FROM sync_state ORDER BY point_id;",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Compteur (PRM)",
+        "multi": false,
+        "name": "prm",
+        "options": [],
+        "query": "SELECT DISTINCT point_id FROM sync_state ORDER BY point_id;",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-7d", "to": "now" },
+  "timepicker": {
+    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"]
+  },
+  "timezone": "browser",
+  "title": "Enedis - Suivi & Courbes de Charge",
+  "uid": "enedis-sge-overview",
+  "version": 1,
+  "weekStart": "monday"
+}
