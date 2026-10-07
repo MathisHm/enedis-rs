@@ -1,7 +1,7 @@
 #![cfg(all(feature = "api", feature = "storage-sqlite"))]
 #[tokio::test]
 async fn test_api_rest_endpoints() {
-    use chrono::{TimeZone, Utc};
+    use chrono::{Duration, Utc};
     use enedis_rs::api::{ApiServer, AppState};
     use enedis_rs::metrics::MetricsRegistry;
     use enedis_rs::signal::ShutdownSignal;
@@ -15,7 +15,7 @@ async fn test_api_rest_endpoints() {
     // 1. Initialisation de la base SQLite et injection de données de test
     let storage = Arc::new(SqliteStorage::connect("sqlite::memory:").await.unwrap());
     let prm = PointId::new("01234567890123").unwrap();
-    let ts = Utc.with_ymd_and_hms(2026, 9, 28, 10, 0, 0).unwrap();
+    let ts = Utc::now() - Duration::hours(1);
 
     let measurement = Measurement {
         point_id: prm,
