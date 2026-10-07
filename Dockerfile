@@ -8,9 +8,10 @@ FROM rust:1-slim-bookworm AS builder
 
 WORKDIR /usr/src/enedis-rs
 
-# Dépendances de compilation C/Perl pour openssl-src (vendored)
+# Dépendances de compilation C/Perl pour openssl-src (vendored) et Swagger UI (curl)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
+    curl \
     perl \
     make \
     gcc \
