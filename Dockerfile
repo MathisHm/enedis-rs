@@ -26,13 +26,14 @@ RUN mkdir -p src/bin tests && \
     echo "fn main() {}" > src/bin/enedis.rs && \
     echo "pub fn dummy() {}" > src/lib.rs && \
     cargo build --release --bin enedis --features "cli,agent,api,mock-sge,storage-postgres,storage-sqlite,mqtt,parquet,analytics" && \
-    rm -rf src target/release/deps/enedis* target/release/enedis*
+    rm -rf src target/release/deps/*enedis* target/release/.fingerprint/*enedis* target/release/enedis* target/release/libenedis*
 
 # Copie des véritables sources du projet
 COPY src ./src
 
 # Compilation du binaire de production optimisé
-RUN cargo build --release --bin enedis --features "cli,agent,api,mock-sge,storage-postgres,storage-sqlite,mqtt,parquet,analytics"
+RUN touch src/lib.rs src/bin/enedis.rs && \
+    cargo build --release --bin enedis --features "cli,agent,api,mock-sge,storage-postgres,storage-sqlite,mqtt,parquet,analytics"
 
 # Étape 2 : Image d'exécution minimale et sécurisée
 FROM debian:bookworm-slim AS runtime
